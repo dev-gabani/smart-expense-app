@@ -6,8 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from functools import wraps
 import os
+import logging
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+
+# Configure internal application logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super_secret_key_change_in_production")
@@ -44,6 +48,10 @@ db_url = os.getenv("DATABASE_URL", 'sqlite:///' + os.path.join(basedir, 'databas
 # Render gives 'postgres://', but SQLAlchemy 1.4+ requires 'postgresql://'
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+# Securely log DB connection without leaking passwords
+safe_host = db_url.split("@")[1] if "@" in db_url else "Local SQLite"
+logging.info(f"Using DB: {safe_host}")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -112,14 +120,19 @@ def add_header(response):
 
 from werkzeug.exceptions import HTTPException
 import traceback
+from sqlalchemy.exc import SQLAlchemyError
 
 @app.errorhandler(Exception)
 def handle_exception(e):
     # Pass through HTTP errors
     if isinstance(e, HTTPException):
         return e
-    # Return exactly what crashed so we can fix it!
-    return f"<h1>Internal Error Detected!</h1><p>Please copy this and send it back:</p><pre style='background:#f4f4f4; padding:10px;'>{traceback.format_exc()}</pre>", 500
+    
+    # Log the actual internal error for developers to debug in the terminal
+    logging.error(f"Unhandled Exception: {str(e)}", exc_info=True)
+    
+    # Show clean, user-friendly UI to the public
+    return render_template("500.html"), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center;">
+    <div style="font-size: 4rem; color: var(--danger); margin-bottom: 1rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Oops! Something went wrong.</h2>
+    <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem;">
+        We encountered an unexpected internal error. Don't worry, the issue has been logged securely and our team will look into it.
+    </p>
+    <a href="/" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+        <i class="fa-solid fa-house"></i> Return Home
+    </a>
+</div>
+{% endblock %}

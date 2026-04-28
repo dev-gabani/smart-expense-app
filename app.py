@@ -37,7 +37,15 @@ from pathlib import Path
 
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+
+# Use PostgreSQL on Render, but fall back to SQLite for local development
+db_url = os.getenv("DATABASE_URL", 'sqlite:///' + os.path.join(basedir, 'database.db'))
+
+# Render gives 'postgres://', but SQLAlchemy 1.4+ requires 'postgresql://'
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 

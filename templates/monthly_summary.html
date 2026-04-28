@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Monthly Summary</h2>
+
+    {% for cat, total in data %}
+        <p>{{ cat }} : ₹{{ total }}</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Budget AI{% endblock %}
+
+{% block topbar_actions %}
+<form method="get" id="monthForm" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 8px; border: 1px solid rgba(42,31,24,0.1);">
+    <i class="fa-regular fa-calendar" style="color: var(--text-secondary);"></i>
+    <input type="month" name="month" value="{{ selected_month }}" onchange="document.getElementById('monthForm').submit()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-weight: 500; cursor: pointer;">
+</form>
+<a href="/export/excel?month={{ selected_month }}" class="btn" style="background: var(--bg-card); color: var(--accent); border: 1px solid rgba(217, 127, 62, 0.3); padding: 0.25rem 0.75rem; border-radius: 8px; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-file-excel"></i> Export</a>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+        <div>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Total Monthly Income Allocation</p>
+            <h2 style="font-size: 2rem;">₹{{ '{:,.2f}'.format(income) }}</h2>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--success);"></div> Safe
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--warning);"></div> Warning
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--danger);"></div> Overspent
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        {% for item in data %}
+        <div class="card" style="position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="text-transform: capitalize; font-size: 1.125rem;">{{ item.name }}</h3>
+                {% if 'Overspent' in item.status %}
+                    <span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> Overspent</span>
+                {% elif 'Warning' in item.status %}
+                    <span class="badge badge-warning"><i class="fa-solid fa-bell"></i> Warning</span>
+                {% else %}
+                    <span class="badge badge-success"><i class="fa-solid fa-check-circle"></i> On Track</span>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                <span style="color: var(--text-secondary);">Spent: <strong>₹{{ '{:,.2f}'.format(item.spent) }}</strong></span>
+                <span style="color: var(--text-secondary);">Budget: <strong>₹{{ '{:,.2f}'.format(item.budget) }}</strong></span>
+            </div>
+
+            <div class="progress-container" style="height: 12px; margin-bottom: 1rem;">
+                {% set percent = (item.spent / item.budget * 100) if item.budget > 0 else 0 %}
+                {% set color = 'var(--success)' %}
+                {% if percent > 100 %}
+                    {% set percent = 100 %}
+                    {% set color = 'var(--danger)' %}
+                {% elif percent > 80 %}
+                    {% set color = 'var(--warning)' %}
+                {% endif %}
+                <div class="progress-bar" style="width: {{ percent }}%; background: {{ color }}; position: relative;">
+                    {% if percent > 5 %}
+                    <span style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 0.6rem; color: white; font-weight: bold;">
+                        {{ "%.0f"|format(percent) }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.4); padding: 0.75rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.875rem; color: var(--text-secondary);">Remaining Allowance</span>
+                <span style="font-weight: 700; font-size: 1.125rem; color: {% if item.remaining < 0 %}var(--danger){% else %}var(--text-primary){% endif %};">
+                    ₹{{ '{:,.2f}'.format(item.remaining) }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

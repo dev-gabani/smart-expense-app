@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}AI Spending Prediction{% endblock %}
+
+{% block topbar_actions %}
+<form method="get" id="monthForm" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 8px; border: 1px solid rgba(42,31,24,0.1);">
+    <i class="fa-regular fa-calendar" style="color: var(--text-secondary);"></i>
+    <input type="month" name="month" value="{{ selected_month }}" onchange="document.getElementById('monthForm').submit()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-weight: 500; cursor: pointer;">
+</form>
+<a href="/export/excel?month={{ selected_month }}" class="btn" style="background: var(--bg-card); color: var(--accent); border: 1px solid rgba(217, 127, 62, 0.3); padding: 0.25rem 0.75rem; border-radius: 8px; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-file-excel"></i> Export</a>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" style="max-width: 800px; margin: 0 auto;">
+    <div class="card" style="text-align: center; padding: 3rem 2rem; margin-bottom: 2rem;">
+        <div style="width: 80px; height: 80px; border-radius: 20px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 32px; color: white; margin-bottom: 1.5rem; ">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">End of Month Forecast</h2>
+        
+        <div style="font-size: 3rem; font-weight: 700; background: var(--accent);   margin-bottom: 0.5rem;">
+            ₹{{ '{:,.2f}'.format(predicted) }}
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Predicted total spend for the current month</p>
+        
+        <div style="display: inline-block; padding: 0.75rem 1.5rem; border-radius: 2rem; font-weight: 600; font-size: 1.125rem; {% if 'Save' in status %}background: rgba(16, 185, 129, 0.2); color: var(--success);{% else %}background: rgba(239, 68, 68, 0.2); color: var(--danger);{% endif %}">
+            {{ status }}
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div class="stat-title">Current Spend</div>
+            <div class="stat-value">₹{{ '{:,.2f}'.format(spent) }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">As of today</div>
+        </div>
+        
+        <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="stat-title">Daily Average Run Rate</div>
+            <div class="stat-value">₹{{ '{:,.2f}'.format(daily_avg) }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Per day this month</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

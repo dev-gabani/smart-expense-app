@@ -1,0 +1,15 @@
+{
+  "name": "Smart Expense AI",
+  "short_name": "SmartExpense",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2a1f18",
+  "theme_color": "#d97f3e",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

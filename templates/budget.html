@@ -1,0 +1,9 @@
+{% extends "base.html" %} {% block content %}
+<div class="card">
+  <h2>Budget (Income: ₹{{ income }})</h2>
+
+  {% for name, amount in budget_data %}
+  <p>{{ name }} : ₹{{ amount }}</p>
+  {% endfor %}
+</div>
+{% endblock %}

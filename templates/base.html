@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Expense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#d97f3e">
+    
+    <!-- iOS PWA Support -->
+    <link rel="apple-touch-icon" href="/static/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    {% if session.get('user') %}
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-wallet"></i>
+            <span>SmartExpense</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/add_expense" class="nav-item {% if request.path == '/add_expense' %}active{% endif %}">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Add Expense</span>
+            </a>
+            <a href="/view_expenses" class="nav-item {% if request.path == '/view_expenses' %}active{% endif %}">
+                <i class="fa-solid fa-list"></i>
+                <span>Transactions</span>
+            </a>
+            <a href="/smart_budget" class="nav-item {% if request.path == '/smart_budget' %}active{% endif %}">
+                <i class="fa-solid fa-bullseye"></i>
+                <span>Smart Budget</span>
+            </a>
+            <a href="/prediction" class="nav-item {% if request.path == '/prediction' %}active{% endif %}">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>AI Prediction</span>
+            </a>
+            <a href="/suggestions" class="nav-item {% if request.path == '/suggestions' %}active{% endif %}">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Suggestions</span>
+            </a>
+            
+            <div style="margin-top: 2rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 1rem;">
+                Settings
+            </div>
+            
+            <a href="/set_income" class="nav-item {% if request.path == '/set_income' %}active{% endif %}">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                <span>Income Settings</span>
+            </a>
+            <a href="/add_category" class="nav-item {% if request.path == '/add_category' %}active{% endif %}">
+                <i class="fa-solid fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            
+            <button id="installBtn" class="nav-item" style="display:none; background: transparent; border: none; text-align: left; width: 100%; cursor: pointer;">
+                <i class="fa-solid fa-download"></i>
+                <span>Install App</span>
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <h1 class="page-title">{% block title %}Dashboard{% endblock %}</h1>
+            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 1rem; width: 100%; justify-content: flex-start; order: 1;">
+                    {% block topbar_actions %}{% endblock %}
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <span>{{ session.get('user', '').title() }}</span>
+                    <a href="/logout" style="color: var(--text-secondary); margin-left: 1rem; text-decoration: none;" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+    <script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? '#10B981' : '#EF4444';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
+        
+        toast.style.cssText = `
+            background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px;
+            font-weight: 500; transform: translateX(100%); opacity: 0; transition: all 0.3s ease;
+        `;
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; }, 10);
+        
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)'; toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('form.ajax-form');
+        forms.forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action || window.location.href, {
+                        method: form.method || 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    let data;
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        data = await response.json();
+                    } else {
+                        // Fallback if not JSON (e.g. redirect happened)
+                        window.location.reload();
+                        return;
+                    }
+
+                    if (response.ok) {
+                        showToast(data.message || 'Success!', 'success');
+                        form.reset();
+                    } else {
+                        showToast(data.error || data.message || 'An error occurred.', 'error');
+                    }
+                } catch (error) {
+                    showToast('Network error or server unavailable.', 'error');
+                    console.error(error);
+                } finally {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    });
+    </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log("Service Worker Registered"));
+        });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        const installBtn = document.getElementById('installBtn');
+        if (installBtn) {
+            installBtn.style.display = 'flex';
+
+            installBtn.addEventListener('click', () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                });
+            });
+        }
+    });
+    </script>
+</body>
+</html>

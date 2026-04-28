@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Expense{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 64px; height: 64px; border-radius: 16px; background: rgba(239, 68, 68, 0.1); color: var(--danger); display: inline-flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-minus"></i>
+            </div>
+            <h2 style="font-size: 1.5rem;">Record Expense</h2>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;">Log a new transaction to track your spending</p>
+        </div>
+
+        <form method="post" class="ajax-form">
+            <div class="form-group">
+                <label><i class="fa-solid fa-layer-group"></i> Category</label>
+                <select name="category" class="form-control" required style="appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                    <option value="" disabled selected>Select a category...</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat[0] }}">{{ cat[0]|title }}</option>
+                    {% endfor %}
+                </select>
+                {% if not categories %}
+                <div style="font-size: 0.75rem; color: var(--warning); margin-top: 0.5rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> No categories found. <a href="/add_category" style="color: var(--accent);">Create one first</a>.
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-indian-rupee-sign"></i> Amount</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-weight: bold;">₹</span>
+                    <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required style="padding-left: 2.5rem; font-size: 1.25rem; font-weight: 600;">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 1rem; font-size: 1.125rem;" {% if not categories %}disabled{% endif %}>
+                Add Expense
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

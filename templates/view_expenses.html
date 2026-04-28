@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions History{% endblock %}
+
+{% block topbar_actions %}
+<form method="get" id="monthForm" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 8px; border: 1px solid rgba(42,31,24,0.1);">
+    <i class="fa-regular fa-calendar" style="color: var(--text-secondary);"></i>
+    <input type="month" name="month" value="{{ selected_month }}" onchange="document.getElementById('monthForm').submit()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-weight: 500; cursor: pointer;">
+</form>
+<a href="/export/excel?month={{ selected_month }}" class="btn" style="background: var(--bg-card); color: var(--accent); border: 1px solid rgba(217, 127, 62, 0.3); padding: 0.25rem 0.75rem; border-radius: 8px; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-file-excel"></i> Export</a>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="font-size: 1.25rem;">All Expenses</h3>
+            <a href="/add_expense" class="btn btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-plus"></i> Add New
+            </a>
+        </div>
+        
+        {% if data %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data|reverse %}
+                    <tr>
+                        <td style="color: var(--text-secondary);">
+                            <i class="fa-regular fa-calendar" style="margin-right: 0.5rem;"></i> {{ row[2] }}
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(217, 127, 62, 0.1); color: var(--accent); display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-tag"></i>
+                                </div>
+                                <span style="font-weight: 500; text-transform: capitalize;">{{ row[0] }}</span>
+                            </div>
+                        </td>
+                        <td style="font-weight: 600; font-size: 1.1rem; color: var(--text-primary);">
+                            ₹{{ '{:,.2f}'.format(row[1]) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-secondary); padding: 4rem 0;">
+            <i class="fa-solid fa-receipt" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5;"></i>
+            <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">No transactions yet</h3>
+            <p>Start tracking your spending by adding an expense.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block topbar_actions %}
+<form method="get" id="monthForm" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 8px; border: 1px solid rgba(42,31,24,0.1);">
+    <i class="fa-regular fa-calendar" style="color: var(--text-secondary);"></i>
+    <input type="month" name="month" value="{{ selected_month }}" onchange="document.getElementById('monthForm').submit()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-weight: 500; cursor: pointer;">
+</form>
+<a href="/export/excel?month={{ selected_month }}" class="btn" style="background: var(--bg-card); color: var(--accent); border: 1px solid rgba(217, 127, 62, 0.3); padding: 0.25rem 0.75rem; border-radius: 8px; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-file-excel"></i> Export</a>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Stats Row -->
+    <div class="grid-3">
+        <div class="card stat-card">
+            <div class="stat-icon primary">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="stat-title">Monthly Income</div>
+            <div class="stat-value">₹{{ '{:,.2f}'.format(income) }}</div>
+        </div>
+        
+        <div class="card stat-card">
+            <div class="stat-icon danger">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+            <div class="stat-title">Total Spent</div>
+            <div class="stat-value">₹{{ '{:,.2f}'.format(spent) }}</div>
+            <div class="progress-container">
+                {% set spent_percent = (spent / income * 100) if income > 0 else 0 %}
+                <div class="progress-bar" style="width: {{ spent_percent }}%; background: var(--danger);"></div>
+            </div>
+        </div>
+        
+        <div class="card stat-card">
+            <div class="stat-icon {% if remaining >= 0 %}success{% else %}danger{% endif %}">
+                <i class="fa-solid fa-piggy-bank"></i>
+            </div>
+            <div class="stat-title">Remaining Balance</div>
+            <div class="stat-value" style="color: {% if remaining >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+                ₹{{ '{:,.2f}'.format(remaining) }}
+            </div>
+            <div class="progress-container">
+                {% set remain_percent = (remaining / income * 100) if income > 0 and remaining > 0 else 0 %}
+                <div class="progress-bar" style="width: {{ remain_percent }}%; background: var(--success);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Habit Insights & Health Score -->
+    <div class="grid-2">
+        <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, rgba(217, 127, 62, 0.05), rgba(42, 31, 24, 0.05)); border: 1px solid rgba(217, 127, 62, 0.2);">
+            <div style="font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.5rem;">Financial Health Score</div>
+            <div style="font-size: 4rem; font-weight: 800; color: {% if score >= 80 %}var(--success){% elif score >= 50 %}var(--warning){% else %}var(--danger){% endif %}; line-height: 1;">
+                {{ "%.0f"|format(score) }}<span style="font-size: 1.5rem; color: var(--text-secondary);">/100</span>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Based on savings ratio and budget adherence
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; font-size: 1.125rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-robot" style="color: var(--accent);"></i> AI Habit Detection</h3>
+            {% if insights %}
+                <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for insight in insights %}
+                    <li style="background: rgba(42, 31, 24, 0.03); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; color: var(--text-primary); border-left: 3px solid var(--accent);">
+                        {{ insight }}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Not enough data this month to generate habits.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Charts & Tables Row -->
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.125rem;">Expenses by Category</h3>
+            {% if category_expenses %}
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="expenseChart"></canvas>
+            </div>
+            {% else %}
+            <div style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
+                <i class="fa-solid fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No expenses tracked this month.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.125rem;">Recent Transactions</h3>
+                <a href="/view_expenses" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 600;">View All</a>
+            </div>
+            
+            {% if recent_transactions %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in recent_transactions %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(217, 127, 62, 0.1); color: var(--accent); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-tag"></i>
+                                    </div>
+                                    <span style="font-weight: 500; text-transform: capitalize;">{{ row[0] }}</span>
+                                </div>
+                            </td>
+                            <td style="color: var(--text-secondary);">{{ row[2] }}</td>
+                            <td style="font-weight: 600;">₹{{ '{:,.2f}'.format(row[1]) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
+                <i class="fa-solid fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No recent transactions.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if category_expenses %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    
+    // Parse data from jinja
+    const labels = [
+        {% for item in category_expenses %}
+            "{{ item[0].title() }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    const data = [
+        {% for item in category_expenses %}
+            {{ item[1] }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    const colors = [
+        '#d97f3e', // primary accent
+        '#e09e62',
+        '#c46d33',
+        '#8f5024',
+        '#e8b68f',
+        '#a15c2a',
+        '#b86c35',
+        '#cc8854'
+    ];
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#94a3b8',
+                        padding: 20,
+                        font: {
+                            family: "'Inter', sans-serif",
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#2a1f18',
+                    titleColor: '#ede8e0',
+                    bodyColor: '#faf8f5',
+                    titleFont: { family: "'Inter', sans-serif", size: 13 },
+                    bodyFont: { family: "'Inter', sans-serif", size: 14, weight: 'bold' },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

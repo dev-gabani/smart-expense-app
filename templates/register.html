@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="card auth-card animate-fade-in">
+        <div class="auth-form-wrapper">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 60px; height: 60px; border-radius: 15px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; color: white; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Create an Account</h2>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Join the Smart Expense platform</p>
+            </div>
+
+            {% if error %}
+            <div style="background: rgba(211, 47, 47, 0.1); border: 1px solid rgba(211, 47, 47, 0.2); color: var(--danger); padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> Choose Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Enter a unique username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Create Password</label>
+                    <input type="password" id="registerPassword" name="password" class="form-control" placeholder="Enter a secure password" required>
+                    <!-- Password strength meter -->
+                    <div id="pwdStrengthContainer" style="display: none; height: 4px; background: rgba(42, 31, 24, 0.1); border-radius: 2px; margin-top: 8px; overflow: hidden; width: 100%;">
+                        <div id="pwdStrengthBar" style="height: 100%; width: 0%; transition: all 0.3s ease; background: transparent;"></div>
+                    </div>
+                    <div id="pwdStrengthText" style="font-size: 0.75rem; margin-top: 4px; text-align: right; font-weight: 500;"></div>
+                </div>
+                
+                <button type="submit" id="registerBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>
+                    Register Now <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                <p>Already have an account? <a href="/login" style="color: var(--accent); text-decoration: none; font-weight: 600;">Sign in here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('registerPassword').addEventListener('input', function(e) {
+    const val = e.target.value;
+    const container = document.getElementById('pwdStrengthContainer');
+    const bar = document.getElementById('pwdStrengthBar');
+    const txt = document.getElementById('pwdStrengthText');
+    const btn = document.getElementById('registerBtn');
+    
+    if (!val) {
+        container.style.display = 'none';
+        bar.style.width = '0%';
+        bar.style.backgroundColor = 'transparent';
+        txt.innerHTML = '';
+        btn.disabled = true;
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    let strength = 0;
+    if (val.length >= 8) strength += 1;
+    if (/[a-zA-Z]/.test(val) && /[0-9]/.test(val)) strength += 1;
+    if (/[^a-zA-Z0-9]/.test(val)) strength += 1;
+    
+    // Require at least medium strength to register
+    btn.disabled = strength < 2;
+    
+    if (strength === 1) {
+        bar.style.width = '33%';
+        bar.style.backgroundColor = '#d32f2f'; // Red
+        txt.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Weak (add numbers/symbols)';
+        txt.style.color = '#d32f2f';
+    } else if (strength === 2) {
+        bar.style.width = '66%';
+        bar.style.backgroundColor = '#ed6c02'; // Yellow
+        txt.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Medium (add special characters)';
+        txt.style.color = '#ed6c02';
+    } else if (strength === 3) {
+        bar.style.width = '100%';
+        bar.style.backgroundColor = '#2e7d32'; // Green
+        txt.innerHTML = '<i class="fa-solid fa-circle-check"></i> Strong';
+        txt.style.color = '#2e7d32';
+    }
+});
+</script>
+{% endblock %}
